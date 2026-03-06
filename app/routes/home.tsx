@@ -1,8 +1,11 @@
-import { ArrowRight, Clock, Layers } from "lucide-react";
 import type { Route } from "./+types/home";
 import Navbar from "./components/Navbar";
+import {ArrowRight, ArrowUpRight, Clock, Layers} from "lucide-react";
 import { Button } from "./components/ui/button";
-
+import Upload from "./components/upload";
+import {useNavigate} from "react-router";
+import {useEffect, useRef, useState} from "react";
+import {createProject, getProjects} from "./components/lib/puter.action";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -12,95 +15,144 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export default function Home() {
-  return(
-    <div className="home">
-      <Navbar />
-      <section className="hero">
-        <div className="announce">
-          <div className="dot">
-            <div className="pulse"></div>
-          </div>
-          <p>Introducing Archiaa 2.0</p>
-        </div>
-        <h1>Design beautiful spaces with Archiaa</h1>
+    const navigate = useNavigate();
+    const [projects, setProjects] = useState<any[]>([]);
+    const isCreatingProjectRef = useRef(false);
 
-        <p className="subtitle">
-          Archiaa is an AI-first design platform that helps you visualize, render, and create architectural spaces faster than ever.
+    const handleUploadComplete = async (base64Image: string) => {
+        try {
 
-        </p>
+            if(isCreatingProjectRef.current) return false;
+            isCreatingProjectRef.current = true;
+            const newId = Date.now().toString();
+            const name = `Architecture ${newId}`;
 
-        <div className="actions">
-          <a href="#upload" className="cta">
-            Start Building Now <ArrowRight className="icon" />
-          </a>
-          <Button variant="outline"size="lg"
-          className="demo">
-            Watch Demo
-          </Button>
-            
-        </div>
-        <div id="upload" className="upload-shell">
-          <div className="grid-overlay" />
+            const newItem = {
+                id: newId, name, sourceImage: base64Image,
+                renderedImage: undefined,
+                timestamp: Date.now()
+            }
 
-          <div className="upload-card">
-            <div className="upload-head">
-              <div className="upload-icon">
-                <Layers className="icon" />
-              </div>
+            const saved = await createProject({ item: newItem, visibility: 'private' });
 
-            
-            <h3>Upload your floor plan</h3>
-            <p>Supports JPG, PNG, formats upto 10MB</p>
-            </div>
-            <p>Upload Images</p>
-          </div>
+            if(!saved) {
+                console.error("Failed to create project");
+                return false;
+            }
 
-        </div>
-      
-      
-      
-      
-      
-      <section className="projects">
-        <div className="section-inner">
-          <div className="section-head">
-            <div className="copy">
-              <h2>Projects</h2>
-              <p>Organize your designs, share with clients, and collaborate with your team all in one place.</p>
-            </div>
-          </div>
-          <div className="projects-grid">
-            <div className="project-card group">
-              <div className="preview">
-                <img src="https://roomify-mlhuk267-dfwu1i.puter.site/projects/1770803585402/rendered.png" alt="Project" />
+            setProjects((prev) => [saved, ...prev]);
 
-                <div className="badge">
-                  <span>Community</span>
-                </div>
-              </div>
-              <div className="card-body">
-                <div> 
-                  <h3>Project Banglore</h3>
-                  <div className="meta">
-                    <Clock size = {12} />
-                    <span>{new Date('01.01.2027').toLocaleDateString()}</span>
-                    <span>By Ginni</span>
+            navigate(`/visualizer/${newId}`, {
+                state: {
+                    initialImage: saved.sourceImage,
+                    initialRendered: saved.renderedImage || null,
+                    name
+                }
+            });
+
+            return true;
+        } finally {
+            isCreatingProjectRef.current = false;
+        }
+    }
+
+    useEffect(() => {
+        const fetchProjects = async () => {
+            const items = await getProjects();
+
+            setProjects(items)
+        }
+
+        fetchProjects();
+    }, []);
+
+  return (
+      <div className="home">
+          <Navbar />
+
+          <section className="hero">
+              <div className="announce">
+                  <div className="dot">
+                      <div className="pulse"></div>
                   </div>
-                </div>
-                <div className="arrow">
-                  <ArrowRight size ={18} />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-      
-      
-      
-      </section>
 
-    </div>
-      
+                  <p>Introducing Archiaa 2.0</p>
+              </div>
+
+              <h1>Build beautiful spaces at the speed of thought with Archiaa</h1>
+
+              <p className="subtitle">
+                  Archiaa is an AI-first design environment that helps you visualize, render, and ship architectural projects faster  than ever.
+              </p>
+
+              <div className="actions">
+                  <a href="#upload" className="cta">
+                      Start Building <ArrowRight className="icon" />
+                  </a>
+
+                  <Button variant="outline" size="lg" className="demo">
+                      Watch Demo
+                  </Button>
+              </div>
+
+              <div id="upload" className="upload-shell">
+                <div className="grid-overlay" />
+
+                  <div className="upload-card">
+                      <div className="upload-head">
+                          <div className="upload-icon">
+                              <Layers className="icon" />
+                          </div>
+
+                          <h3>Upload your floor plan</h3>
+                          <p>Supports JPG, PNG, formats up to 10MB</p>
+                      </div>
+
+                      <Upload onComplete={handleUploadComplete} />
+                  </div>
+              </div>
+          </section>
+
+          <section className="projects">
+              <div className="section-inner">
+                  <div className="section-head">
+                      <div className="copy">
+                          <h2>Projects</h2>
+                          <p>Your latest work and shared community projects, all in one place.</p>
+                      </div>
+                  </div>
+
+                  <div className="projects-grid">
+                      {projects.map(({id, name, renderedImage, sourceImage, timestamp}) => (
+                          <div key={id} className="project-card group" onClick={() => navigate(`/visualizer/${id}`)}>
+                              <div className="preview">
+                                  <img  src={renderedImage || sourceImage} alt="Project"
+                                  />
+
+                                  <div className="badge">
+                                      <span>Community</span>
+                                  </div>
+                              </div>
+
+                              <div className="card-body">
+                                  <div>
+                                      <h3>{name}</h3>
+
+                                      <div className="meta">
+                                          <Clock size={12} />
+                                          <span>{new Date(timestamp).toLocaleDateString()}</span>
+                                          <span>By Ginni Arora</span>
+                                      </div>
+                                  </div>
+                                  <div className="arrow">
+                                      <ArrowUpRight size={18} />
+                                  </div>
+                              </div>
+                          </div>
+                      ))}
+                  </div>
+              </div>
+          </section>
+      </div>
   )
 }

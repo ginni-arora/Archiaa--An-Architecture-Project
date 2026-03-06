@@ -116,7 +116,7 @@ archiaa/
 Clone the repository
 
 ```
-git clone https://github.com/yourusername/archiaa.git
+git clone https://github.com/ginni-arora/Archiaa--An-Architecture-Project
 cd archiaa
 ```
 
