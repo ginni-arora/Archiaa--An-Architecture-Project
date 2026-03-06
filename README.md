@@ -1,6 +1,6 @@
-# Archia
+# Archiaa
 
-Archia is an AI-powered architectural visualization web application that converts simple 2D floor plans into generated 3D-style interior layouts. The project explores how modern web technologies and AI services can be combined to build a functional SaaS-style application with minimal infrastructure setup.
+Archiaa is an AI-powered architectural visualization web application that converts simple 2D floor plans into generated 3D-style interior layouts. The project explores how modern web technologies and AI services can be combined to build a functional SaaS-style application with minimal infrastructure setup.
 
 Users can upload a floor plan image, generate a visualization using AI, compare the original layout with the generated result, and manage their projects through a simple interface.
 
@@ -87,7 +87,7 @@ Receives the uploaded floor plan and generates a visual interpretation of the la
 ## Project Structure
 
 ```
-archia/
+archiaa/
 │
 ├── app/
 │   ├── routes/
@@ -116,8 +116,8 @@ archia/
 Clone the repository
 
 ```
-git clone https://github.com/yourusername/archia.git
-cd archia
+git clone https://github.com/yourusername/archiaa.git
+cd archiaa
 ```
 
 Install dependencies
